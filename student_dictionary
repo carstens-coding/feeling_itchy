@@ -1,0 +1,23 @@
+## Most up to date dictionary of students in the Carstens' Lab
+
+student_dictionary = {"Melanie" : 1, "Amanda" : 2, "Jeremy" : 3,
+                      "Lauren" : 4, "Manrit" : 5, "Katherine": 6,
+                      "Jacob" : 7, "India" : 8, "Cari" : 9,
+                      "Brooke" : 10, "Vy" : 11, "Madeline": 12,
+                      "Kenny" : 13, "Charles" : 14, "Catherine" : 15,
+                      "Avina" : 16, "Gary" : 17, "Nicole" : 18,
+                      "Matti" : 19, "Tanya" : 20, "Wahaj" : 21,
+                      "Iqra" : 22, "Zaid" : 23, "Sumeet" : 24,
+                      "Vivian" : 25, "James" : 26, "Luffy" : 27,
+                      "Loreena" : 28, "An" : 29}
+
+reverse_dictionary = {1 : "Melanie", 2 : "Amanda", 3 : "Jeremy",
+                      4 : "Lauren", 5 : "Manrit", 6 : "Katherine",
+                      7 : "Jacob", 8 : "India", 9 : "Cari",
+                      10 : "Brooke", 11 : "Vy", 12 : "Madeline",
+                      13 : "Kenny", 14 : "Charles", 15 : "Catherine",
+                      16 : "Avina", 17 : "Gary", 18 : "Nicole",
+                      19 : "Matti", 20 : "Tanya", 21 : "Wahaj",
+                      22 : "Iqra", 23 : "Zaid", 24: "Sumeet",
+                      25 : "Vivian", 26 : "James", 27 : "Luffy",
+                      28 : "Loreena", 29: "An"}
