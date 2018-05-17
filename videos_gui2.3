@@ -1,0 +1,252 @@
+import sys
+import time
+import pymysql as PyMySQL
+import tkinter as tk
+from tkinter import *
+
+
+#sys.stderr = open("errlog.txt", "w") #use if errors occur within the program; dumps data to the file
+
+student_dictionary = {"Melanie" : 1, "Amanda" : 2, "Jeremy" : 3,
+                      "Lauren" : 4, "Manrit" : 5, "Katherine": 6,
+                      "Jacob" : 7, "India" : 8, "Cari" : 9,
+                      "Brooke" : 10, "Vy" : 11, "Madeline": 12,
+                      "Kenny" : 13, "Charles" : 14, "Catherine" : 15,
+                      "Avina" : 16, "Gary" : 17, "Nicole" : 18,
+                      "Matti" : 19, "Tanya" : 20, "Wahaj" : 21,
+                      "Iqra" : 22, "Zaid" : 23, "Sumeet" : 24,
+                      "Vivian" : 25, "James" : 26, "Luffy" : 27,
+                      "Loreena" : 28, "An" : 29}
+
+updates = "None\n"
+
+greetings_text = [" Welcome to the Carsten's Lab Itch and \n Pain Tracker!\n", "\n",
+                  " There's instructions on the right! --->\n", "\n",
+                  " Updates: "+updates, "\n",
+                  " Keep up the great work everyone! :)"]
+                  
+
+instructions_text = ["Sign In:\n1) Enter your first name into the top box.\n--- The first letter must be capitalized!\n",
+                     "2) Hit sign in!\nExample: Jeremy", "\n",
+                     "\n",
+                     "Sign Out:\n1) Enter your first name into the top box. Same format.", "\n",
+                     "2) Say what you did: If you watched a video, write its full\nname. (i.e. C57_male_3_30-40_JD)\n",
+                     "3) If you did some other tasks (i.e. checked animals), write that!\n",
+                     "--- Separate video names and/or task names by a COMMA (,).\n",
+                     "--- Example: checked animals, C57_male_3_30-40_JD, Sash...\n",
+                     "4) Enter the number of videos you COMPLETED today.\n",
+                     "5) Hit sign out and have a great day!"]
+
+
+def sign_in(name_entry):
+    status = 0 #0 = no error, 1 = error
+    sign_in_time = time.strftime('%Y-%m-%d %H:%M:%S')
+    worker_id = student_dictionary[name_entry]
+    #print(worker_id)
+    
+    db = PyMySQL.connect("localhost", "root", "Cars$2001",
+                         port = 3306, db = "carstens_lab")
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute("""INSERT INTO clocking_table(worker_id, sign_in) VALUES (%s, %s)""",(worker_id, sign_in_time))
+        db.commit()
+
+    except:
+        #Rollback in case of error
+        db.rollback()
+        print("Error")
+        status = 1
+    
+##    if status == 0: troubleshooting steps for problems
+##        print("Ok, you've signed in at: ")
+##        print(sign_in_time)
+##    else:
+##        print("failed")
+
+    #disconnect from server
+    db.close()
+
+
+
+def sign_out(name_entry, taskname_entry, vidnum_entry):
+    status = 0 #0 = no error, 1 = error
+    sign_out_time = time.strftime('%Y-%m-%d %H:%M:%S')
+    worker_id = student_dictionary[name_entry]
+    if len(vidnum_entry) == 0:
+        vidnum_entry = 0
+
+    #multiple task splitting
+    task_name = taskname_entry
+    task_name_split = task_name.split(',')
+    if len(task_name) == 0:
+        outputList = ['none','none','none']
+    if len(task_name_split) == 1:
+        addition = ['none','none']
+        task_name_final = task_name_split + addition
+        outputList = task_name_final
+    elif len(task_name_split) == 2:
+        addition = ['none']
+        task_name_final = task_name_split + addition
+        outputList = task_name_final
+    else:
+        outputList = task_name_split
+    videos_watched = int(vidnum_entry)
+    today = time.strftime('%Y-%m-%d')
+##    print(worker_id)
+##    print(today)
+
+    db = PyMySQL.connect("localhost", user = "root",
+                         passwd = "Cars$2001", port = 3306, db = "carstens_lab")
+    cursor = db.cursor()
+
+    try:
+        cursor.execute("""UPDATE clocking_table SET sign_out = %s WHERE worker_id = %s AND LEFT(sign_in, 10) = %s""",
+                       (sign_out_time, worker_id, today))
+        cursor.execute("""UPDATE clocking_table SET videos_watched = %s WHERE worker_id = %s AND LEFT(sign_in, 10) = %s""",
+                       (videos_watched, worker_id, today))
+        cursor.execute("""UPDATE clocking_table SET task1 = %s WHERE worker_id = %s AND LEFT (sign_in, 10) = %s""",
+                       (outputList[0], worker_id, today))
+        cursor.execute("""UPDATE clocking_table SET task2 = %s WHERE worker_id = %s AND LEFT (sign_in, 10) = %s""",
+                       (outputList[1], worker_id, today))
+        cursor.execute("""UPDATE clocking_table SET task3 = %s WHERE worker_id = %s AND LEFT (sign_in, 10) = %s""",
+                       (outputList[2], worker_id, today))
+
+
+        
+        #Commit to the database!
+        db.commit()
+        
+    except:
+        #rollback in case of error
+        db.rollback()
+##        print("Error")
+        status = 1
+
+##    if status == 0:
+##        print("Ok, you've signed out at: ")
+##        print(sign_out_time)
+##    else:
+##        print("failed")
+
+    #disconnect from server
+    db.close()
+
+
+
+def Itchy():
+    self = Tk()
+    self.title("Feeling Itchy? V2.3")
+    self.configure(bg='red')
+
+    def createWidgets(self):
+        def process_callback(*args):
+            response = sign_in(name_entry.get())
+            name_entry.delete(10)
+            activity_text.configure(state='normal')
+            activity_text.delete(0.0, END)
+            activity_text.insert(0.0, "Signed in!")
+            activity_text.configure(state='disabled')
+
+        def process_callback2(*args):
+            response = sign_out(name_entry.get(), taskname_entry.get(), vidnum_entry.get())
+            name_entry.delete(10)
+            taskname_entry.delete(10)
+            vidnum_entry.delete(10)
+            activity_text.configure(state='normal')
+            activity_text.delete(0.0, END)
+            activity_text.insert(0.0, "Signed out!")
+            activity_text.configure(state='disabled')
+
+        #topFrame config
+        topFrame = tk.Frame(self)
+        topFrame.configure(bg='red')
+
+        #buttonFrame config
+        buttonFrame = tk.Frame(self)
+        buttonFrame.configure(bg='red')
+
+        #rightFrame config
+        rightFrame = tk.Frame(self)
+        rightFrame.configure(bg='red')
+
+        #packing overall frame
+        topFrame.pack(side=TOP, fill="x")
+        buttonFrame.pack(side=LEFT, fill ="x")
+        rightFrame.pack(side=RIGHT)
+
+        #text frame/topFrame
+        greeting_frame = Text(topFrame, height=16, width=40, bg='white')
+        greeting_frame.pack(side=LEFT)
+        for i in greetings_text:
+            greeting_frame.insert(END, i)
+        greeting_frame.configure(state=DISABLED)
+
+        instructions_frame = Text(topFrame, height=16, width=60, bg='white')
+        instructions_frame.pack(side=RIGHT)
+        for i in instructions_text:
+            instructions_frame.insert(END,i)
+        instructions_frame.configure(state=DISABLED)
+
+        #button frame
+        signin_button = tk.Button(buttonFrame, width=15, bd=7, bg='dark gray',
+                              text = "Sign In", command=process_callback)
+        signin_button.pack()
+
+        signout_button = tk.Button(buttonFrame, width=15, bd=7, bg='dark gray',
+                               text = "Sign Out", command=process_callback2)
+        signout_button.pack()
+
+        #entry frame/rightFrame
+
+        #name instruction textbox
+        name_instruction = tk.Text(rightFrame, width=42, bd=5, height=1, bg='white')
+        name_instruction.pack(side=TOP)
+        name_instruction.insert(0.0, "Please enter your first name in this box.")
+        name_instruction.configure(state=DISABLED)
+
+        #name entry box
+        name_entry = tk.Entry(rightFrame, width=56, bd=5, bg = 'white')
+        name_entry.pack(side=TOP)
+        name_entry.focus()
+        name_entry.bind(process_callback)
+        name_entry.bind(process_callback2)
+
+        #videoname instruction textbox
+        vidname_instruction = tk.Text(rightFrame, width=42, bd=5, height=1, bg='white')
+        vidname_instruction.pack(side=TOP)
+        vidname_instruction.insert(0.0, "Enter the name of the task(s) completed.")
+        vidname_instruction.configure(state=DISABLED)
+
+        #videoname entry box
+        taskname_entry = tk.Entry(rightFrame, width=56, bd=5)
+        taskname_entry.pack(side=TOP)
+        taskname_entry.focus()
+        taskname_entry.bind(process_callback2)
+
+        #videonumber instruction box
+        vidnum_instruction = tk.Text(rightFrame, width=42, bd=5, height=1, bg='white')
+        vidnum_instruction.pack(side=TOP)
+        vidnum_instruction.insert(0.0, "Enter the number of videos completed.")
+        vidnum_instruction.configure(state=DISABLED)
+
+        #vidnum entry box
+        vidnum_entry = tk.Entry(rightFrame, width=56, bd=5)
+        vidnum_entry.pack(side=TOP)
+        vidnum_entry.focus()
+        vidnum_entry.bind(process_callback2)
+
+        #activity frame/bottomFrame is done within process_callback and process_callback2
+        activity_text = Text(buttonFrame, height=2, width=15, bd=5, bg='white')
+        activity_text.pack()
+        activity_text.configure(state=DISABLED)
+    
+
+
+    createWidgets(self)
+    
+    self.mainloop()
+
+
+    
+Itchy()
