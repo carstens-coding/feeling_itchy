@@ -1,0 +1,130 @@
+import pymysql as PyMySQL
+import csv
+import pandas as pd
+import numpy as np
+import time
+import datetime
+
+student_dictionary = {"Melanie" : 1, "Amanda" : 2, "Jeremy" : 3,
+                      "Lauren" : 4, "Manrit" : 5, "Katherine": 6,
+                      "Jacob" : 7, "India" : 8, "Cari" : 9,
+                      "Brooke" : 10, "Vy" : 11, "Madeline": 12,
+                      "Kenny" : 13, "Charles" : 14, "Catherine" : 15,
+                      "Avina" : 16, "Gary" : 17, "Nicole" : 18,
+                      "Matti" : 19, "Tanya" : 20, "Wahaj" : 21,
+                      "Iqra" : 22, "Zaid" : 23, "Sumeet" : 24,
+                      "Vivian" : 25, "James" : 26, "Luffy" : 27,
+                      "Loreena" : 28, "An" : 29}
+
+reverse_dictionary = {1 : "Melanie", 2 : "Amanda", 3 : "Jeremy",
+                      4 : "Lauren", 5 : "Manrit", 6 : "Katherine",
+                      7 : "Jacob", 8 : "India", 9 : "Cari",
+                      10 : "Brooke", 11 : "Vy", 12 : "Madeline",
+                      13 : "Kenny", 14 : "Charles", 15 : "Catherine",
+                      16 : "Avina", 17 : "Gary", 18 : "Nicole",
+                      19 : "Matti", 20 : "Tanya", 21 : "Wahaj",
+                      22 : "Iqra", 23 : "Zaid", 24: "Sumeet",
+                      25 : "Vivian", 26 : "James", 27 : "Luffy",
+                      28 : "Loreena", 29: "An"}
+
+date_start = str(input("What date do you want to start from? yyyy-mm-dd "))
+year_start, month_start, day_start = map(int, date_start.split('-'))
+date_start = datetime.date(year_start,month_start,day_start)
+date_starts = [date_start]
+
+date_end = str(input("What date do you want to end at? yyyy-mm-dd "))
+year_end, month_end, day_end = map(int, date_end.split('-'))
+date_end = datetime.date(year_end, month_end, day_end)
+date_ends = [date_end]
+
+x = ', '.join('"{0}"'.format(w) for w in date_starts)
+y = ', '.join('"{0}"'.format(w) for w in date_ends)
+
+
+
+
+
+sql = "SELECT * FROM clocking_table WHERE sign_in BETWEEN %s AND %s" %(x, y)
+
+def workers_output_week():
+    db = PyMySQL.connect("localhost", user ="root", passwd = "Cars$2001",
+                         port = 3306, db = "carstens_lab")
+    cursor = db.cursor()
+    try:
+        df = pd.read_sql(sql, db)
+        print(sql)
+        
+        print('successful fetch')
+        print(df)
+                
+    except:
+        db.rollback()
+        print('error')
+    
+    db.close()
+
+    df1 = df.iloc[:,0].replace(reverse_dictionary)
+    df['worker_id'] = df1
+    
+    print(df)
+    df2 = df.iloc[:,1]
+    df3 = df.iloc[:,2]
+    tdelta = df3-df2
+    df4 = tdelta
+    df4 = df4.astype('timedelta64[s]')
+    df4 = df4/3600
+    df4 = np.round(df4, decimals=2)
+    df5 = df['videos_watched']/df4
+
+    df['time_in(h)'] = df4
+    df['video productivity'] = df5
+
+    df = df.replace([np.inf, -np.inf],0)
+
+
+    df.to_csv('summary_output_test.csv')
+
+    worker_list = []
+    week_total = []
+    videos_watched = []
+
+    df_new = pd.read_csv('summary_output_test.csv', skiprows=0)
+
+    for row in df_new['worker_id']:
+        worker_list.append(row)
+        week_total.append(0)
+        videos_watched.append(0)
+    dictionary = dict(zip(worker_list, week_total))
+    dictionary2 = dict(zip(worker_list, videos_watched))
+
+
+    current_df_position = 0
+
+    for row in df_new['worker_id']:
+        for key, time in dictionary.items():
+            if row == key:
+                dictionary[key] += df_new.iloc[current_df_position]['time_in(h)']
+                current_df_position += 1
+            else:
+                pass
+
+    current_df_position = 0
+
+    for row in df_new['worker_id']:
+        for key, video in dictionary2.items():
+            if row == key:
+                dictionary2[key] += df_new.iloc[current_df_position]['videos_watched']
+                current_df_position +=1
+            else:
+                pass
+
+    df_final = pd.DataFrame.from_dict(dictionary, orient='index')
+    df_video = pd.DataFrame.from_dict(dictionary2, orient='index')
+    df_video = df_video.iloc[:,0]
+    df_final['Total Vids Watched'] = df_video 
+    df_final.to_csv('hour_summary_test.csv')    
+    
+
+    
+    
+workers_output_week()
