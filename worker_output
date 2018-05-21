@@ -47,8 +47,8 @@ y = ', '.join('"{0}"'.format(w) for w in date_ends)
 sql = "SELECT * FROM clocking_table WHERE sign_in BETWEEN %s AND %s" %(x, y)
 
 def workers_output_week():
-    db = PyMySQL.connect("localhost", user ="root", passwd = "Cars$2001",
-                         port = 3306, db = "carstens_lab")
+    db = PyMySQL.connect("localhost", user ="user", passwd = "passwd",
+                         port = port, db = "carstens_lab")
     cursor = db.cursor()
     try:
         df = pd.read_sql(sql, db)
