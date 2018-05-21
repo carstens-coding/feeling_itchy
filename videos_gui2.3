@@ -44,8 +44,8 @@ def sign_in(name_entry):
     worker_id = student_dictionary[name_entry]
     #print(worker_id)
     
-    db = PyMySQL.connect("localhost", "root", "Cars$2001",
-                         port = 3306, db = "carstens_lab")
+    db = PyMySQL.connect("localhost", "user", "passwd",
+                         port = port, db = "carstens_lab")
     cursor = db.cursor()
     
     try:
@@ -96,8 +96,8 @@ def sign_out(name_entry, taskname_entry, vidnum_entry):
 ##    print(worker_id)
 ##    print(today)
 
-    db = PyMySQL.connect("localhost", user = "root",
-                         passwd = "Cars$2001", port = 3306, db = "carstens_lab")
+    db = PyMySQL.connect("localhost", user = "user",
+                         passwd = "passwd", port = port, db = "carstens_lab")
     cursor = db.cursor()
 
     try:
